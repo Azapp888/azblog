@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ServicePressure:给自己写的服务器监控,先救了自己 · 阿泽Aza</title>
+    <meta name="description" content="凌晨三点服务器负载打满我却毫不知情——ServicePressure 的诞生过程:追踪负载/内存/磁盘,告警推送到手机。" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+            background: #0A0E0A;
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(10, 14, 10, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(30, 215, 96, 0.14);
+        }
+        .topnav-inner {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+        .topnav a { color: #bbb; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .topnav a:hover { color: #1ED760; }
+        .topnav-brand { color: #fff !important; font-weight: 700; font-size: 1rem; }
+        .topnav-brand span { color: #1ED760; }
+        main { max-width: 760px; margin: 0 auto; padding: 40px 24px 64px; }
+        .post-meta { display: flex; gap: 12px; font-size: 0.85rem; color: #999; margin-bottom: 12px; }
+        .post-meta .date { color: #1ED760; font-weight: 500; }
+        h1 { font-size: 1.7rem; color: #fff; line-height: 1.4; margin-bottom: 28px; }
+        article h2 { font-size: 1.25rem; color: #1ED760; margin: 36px 0 14px; }
+        article p { margin-bottom: 16px; color: #d0d0d0; text-indent: 2em; }
+        article p.no-indent { text-indent: 0; }
+        article pre {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(30, 215, 96, 0.15);
+            border-radius: 10px;
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 0 0 18px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        article code {
+            font-family: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+            background: rgba(30, 215, 96, 0.10);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #1ED760;
+        }
+        article pre code { background: none; padding: 0; color: #d0d0d0; }
+        article ul { margin: 0 0 16px 2em; color: #d0d0d0; }
+        article li { margin-bottom: 6px; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; }
+        @media (prefers-reduced-motion: reduce) { .topnav a { transition: none; } }
+    </style>
+</head>
+<body>
+<nav class="topnav" aria-label="主导航">
+    <div class="topnav-inner">
+        <a class="topnav-brand" href="../index.html">阿泽<span>Aza</span></a>
+        <a href="../index.html#posts">← 返回技术笔记</a>
+    </div>
+</nav>
+<main>
+    <article>
+        <a class="back-link" href="../index.html#posts"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回</a>
+        <div class="post-meta">
+            <span class="date">2026-07-30</span>
+            <span>运维 · 监控 · 告警</span>
+        </div>
+        <h1>ServicePressure:给自己写的服务器监控,先救了自己</h1>
+
+        <p>ServicePressure 的诞生很俗:因为出过一次事故。有天晚上我打开浏览器,发现一个小项目访问不动了,登上去一看,负载已经高得离谱,内存也快见底了。问题是我之前完全没注意到——机器一直这么"带病"运行,直到慢到我感知为止。</p>
+
+        <h2>事故之后想明白的一件事</h2>
+        <p>我一开始想装一个现成的监控面板。看了几个,要么功能多到我用不上,要么要配一堆我不熟的东西。最后我反过来想:我到底需要什么?答案很简单——<strong>我想知道机器现在压力大不大,大到我该管了的时候,有人告诉我</strong>。就这么两点。</p>
+        <p>于是 ServicePressure 就是按这个最小需求写的:实时追踪 CPU 负载、内存、磁盘使用,画成页面,超过阈值就推告警。没有别的。</p>
+
+        <h2>它现在怎么工作</h2>
+        <ul>
+            <li>一个常驻进程每隔几秒采样一次系统的负载、内存和磁盘指标。</li>
+            <li>采样结果存成简单的历史数据,前端页面画出来,打开就能看到趋势,而不只是一个当前值。</li>
+            <li>指标超过我设的阈值(比如磁盘占用到 85%)就触发告警,推送到我的手机。</li>
+        </ul>
+        <p>页面部署在我自己的域名下,手机上随时能打开看一眼。现在它是我睡前必查的东西,比看手机电量还勤。</p>
+
+        <h2>写得最值的部分是告警</h2>
+        <p>说实话,趋势图看个热闹就完了,真正救过我的是告警。有一次磁盘悄悄涨上去了——是某个服务的日志没做轮转,一个晚上写了快 30G。没有告警的话,下次发现就是磁盘写满、服务全挂。手机上的那条通知让我在睡觉前就把日志清理规则加上了。</p>
+        <p>这个经历让我确认了一件事:监控的价值不在于"能看到",而在于"出事了会在你还能处理的时候叫你"。</p>
+
+        <h2>一个小项目的边界</h2>
+        <p>它不是什么专业的监控系统,单机、单进程、代码量不大,很多地方都是能跑就行。但对我来说,它是第一个"先解决了自己的真实问题"的东西。下一步想加的也不多:告警恢复通知,和按服务拆分资源占用。先想到哪写到哪。</p>
+        <p class="no-indent">—— 阿泽,高三,时间不多,周末更新。</p>
+    </article>
+</main>
+</body>
+</html>

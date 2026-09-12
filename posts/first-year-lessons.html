@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>从连变量都不懂到现在:一个野路子自学的这几年 · 阿泽Aza</title>
+    <meta name="description" content="初中第一次打开 Python 时,我连变量是什么都不知道。野路子自学踩过的坑,和回头看觉得庆幸的习惯。" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+            background: #0A0E0A;
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(10, 14, 10, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(30, 215, 96, 0.14);
+        }
+        .topnav-inner {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+        .topnav a { color: #bbb; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .topnav a:hover { color: #1ED760; }
+        .topnav-brand { color: #fff !important; font-weight: 700; font-size: 1rem; }
+        .topnav-brand span { color: #1ED760; }
+        main { max-width: 760px; margin: 0 auto; padding: 40px 24px 64px; }
+        .post-meta { display: flex; gap: 12px; font-size: 0.85rem; color: #999; margin-bottom: 12px; }
+        .post-meta .date { color: #1ED760; font-weight: 500; }
+        h1 { font-size: 1.7rem; color: #fff; line-height: 1.4; margin-bottom: 28px; }
+        article h2 { font-size: 1.25rem; color: #1ED760; margin: 36px 0 14px; }
+        article p { margin-bottom: 16px; color: #d0d0d0; text-indent: 2em; }
+        article p.no-indent { text-indent: 0; }
+        article ul { margin: 0 0 16px 2em; color: #d0d0d0; }
+        article li { margin-bottom: 6px; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; }
+        @media (prefers-reduced-motion: reduce) { .topnav a { transition: none; } }
+    </style>
+</head>
+<body>
+<nav class="topnav" aria-label="主导航">
+    <div class="topnav-inner">
+        <a class="topnav-brand" href="../index.html">阿泽<span>Aza</span></a>
+        <a href="../index.html#posts">← 返回技术笔记</a>
+    </div>
+</nav>
+<main>
+    <article>
+        <a class="back-link" href="../index.html#posts"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回</a>
+        <div class="post-meta">
+            <span class="date">2026-07-12</span>
+            <span>随笔 · 自学</span>
+        </div>
+        <h1>从连变量都不懂到现在:一个野路子自学的这几年</h1>
+
+        <p>初中那会儿,我对着教程里第一行 <code>x = 1</code>,脑子里转了很久:这个 x 到底是什么, "=" 号在这里和数学里的 "=" 好像又不一样。那个"变量到底是什么"的困惑,我大概纠结了一整个暑假才真正过去。</p>
+
+        <h2>野路子是怎么形成的</h2>
+        <p>没有报班,没有系统课程,也没有人带我。我的学习路径基本是:想做一个东西 → 卡住 → 搜 → 抄一个看起来能跑的 → 跑起来 → 不知道为什么能跑。回头看,这个循环里"不知道为什么能跑"的部分最危险,因为它让很多错误认知跟着代码一起存下来了。</p>
+        <p>现在我对这个循环的态度变了:抄可以,但抄完要追问"它为什么是这样"。哪怕每次只弄明白一点点,几年下来,地基是一点一点实起来的。</p>
+
+        <h2>踩过的几个大坑</h2>
+        <ul>
+            <li>抄来的代码不敢改。有一阵我特别怕动别人写的代码,改一个参数就崩。后来才明白,不敢改是因为没读懂,解决办法不是更小心,而是先读懂。</li>
+            <li>把"能跑"当"对"。一个脚本跑了三个月,直到有一天数据量变大了才露出问题。能跑只是及格线,不是终点。</li>
+            <li>不记东西。早期踩的坑全忘了,同样的坑隔几个月再踩一次。后来开始写笔记(对,就是现在这个博客的前身),才发现记忆这东西是可以外包给文字的。</li>
+            <li>一个人闷头做,不给人看。做出来的东西只有我自己觉得能用,给别人一看全是问题。现在我会把页面给别人点一点,被骂一次顶自己琢磨十次。</li>
+        </ul>
+
+        <h2>几个回头看很庆幸的习惯</h2>
+        <ul>
+            <li>从很早就用 Git。哪怕仓库里只有一个我,每次提交前写一句"改了什么",出问题时翻记录能救命。</li>
+            <li>先让小的东西跑起来,再慢慢加。这个习惯让我从来没有被一个大项目吓退过。</li>
+            <li>出错先看报错信息,别慌。报错是免费的人工讲解,我初中那会儿最讨厌的东西,现在是我最先读的东西。</li>
+        </ul>
+
+        <h2>高三以后</h2>
+        <p>现在时间比从前少得多,一周能敲代码的窗口就那么几个晚上。但我觉得这反而是好事:时间少,逼着我每次坐下来都先想清楚"这一小时我要做出什么",而不是打开编辑器漫无目的地写。效率这个东西,是被时间逼出来的。</p>
+        <p class="no-indent">—— 阿泽,高三,时间不多,但还在敲。</p>
+    </article>
+</main>
+</body>
+</html>

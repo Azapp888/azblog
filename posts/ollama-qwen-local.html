@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>在自己服务器上跑 Qwen:一次真实的本地大模型部署 · 阿泽Aza</title>
+    <meta name="description" content="从装 Ollama、选模型、限流,到写成 REST 接口给自己用——把开源大模型搬上自己 VPS 的全过程。" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+            background: #0A0E0A;
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(10, 14, 10, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(30, 215, 96, 0.14);
+        }
+        .topnav-inner {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+        .topnav a { color: #bbb; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .topnav a:hover { color: #1ED760; }
+        .topnav-brand { color: #fff !important; font-weight: 700; font-size: 1rem; }
+        .topnav-brand span { color: #1ED760; }
+        main { max-width: 760px; margin: 0 auto; padding: 40px 24px 64px; }
+        .post-meta { display: flex; gap: 12px; font-size: 0.85rem; color: #999; margin-bottom: 12px; }
+        .post-meta .date { color: #1ED760; font-weight: 500; }
+        h1 { font-size: 1.7rem; color: #fff; line-height: 1.4; margin-bottom: 28px; }
+        article h2 { font-size: 1.25rem; color: #1ED760; margin: 36px 0 14px; }
+        article p { margin-bottom: 16px; color: #d0d0d0; text-indent: 2em; }
+        article p.no-indent { text-indent: 0; }
+        article pre {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(30, 215, 96, 0.15);
+            border-radius: 10px;
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 0 0 18px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        article code {
+            font-family: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+            background: rgba(30, 215, 96, 0.10);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #1ED760;
+        }
+        article pre code { background: none; padding: 0; color: #d0d0d0; }
+        article ul { margin: 0 0 16px 2em; color: #d0d0d0; }
+        article li { margin-bottom: 6px; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; }
+        @media (prefers-reduced-motion: reduce) { .topnav a { transition: none; } }
+    </style>
+</head>
+<body>
+<nav class="topnav" aria-label="主导航">
+    <div class="topnav-inner">
+        <a class="topnav-brand" href="../index.html">阿泽<span>Aza</span></a>
+        <a href="../index.html#posts">← 返回技术笔记</a>
+    </div>
+</nav>
+<main>
+    <article>
+        <a class="back-link" href="../index.html#posts"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回</a>
+        <div class="post-meta">
+            <span class="date">2026-08-20</span>
+            <span>本地部署 · Ollama · Qwen</span>
+        </div>
+        <h1>在自己服务器上跑 Qwen:一次真实的本地大模型部署</h1>
+
+        <p>先交代背景:我有一台自己的 VPS,平时跑着几个小项目。前阵子想把开源大模型也搬上去,给自己写个小助手用。整件事花了我一个周末,中间踩的坑比想的还多。这篇把过程记下来,也给同样想折腾的人一个参考。</p>
+
+        <h2>为什么是自己部署,而不是直接用现成的 API</h2>
+        <p>原因很朴素:便宜,而且好玩。现成的 API 按量收费,我这种用法一个月没几个请求,付钱划不来。更重要的是,把模型装在自己机器上、看着它真的跑起来,那种感觉和"调一个接口"完全不一样。</p>
+
+        <h2>装 Ollama</h2>
+        <p>本地跑开源模型最省事的入口是 <code>Ollama</code>,一条命令装好:</p>
+        <pre><code>curl -fsSL https://ollama.com/install.sh | sh</code></pre>
+        <p>装完以后 Ollama 会在本地监听一个端口,对外提供类似 OpenAI 的接口。后面所有应用都直接打这个端口,不用关心模型本身。</p>
+
+        <h2>选模型:先被磁盘教育了一课</h2>
+        <p>我第一次直接拉了一个挺大的 Qwen 模型,结果下载进度条走完的时候,磁盘也差不多满了。这是我的失误:装之前应该先 <code>df -h</code> 看一眼剩余空间。模型文件动辄几个 G,加上日志和缓存,VPS 那点磁盘真的经不起造。</p>
+        <p>后来我换成了一个更小的量化版本,速度反而更快,日常对话完全够用。一个心得是:先跑最小的能用的,不够再往上加,别一上来就堆参数。</p>
+
+        <h2>写成接口给自己用</h2>
+        <p>模型跑起来之后,我写了一个很小的 Flask 服务,把 Ollama 的接口包一层,加上自己的逻辑(比如上下文裁剪、简单限流),这样我的小工具就能统一调它,不用各自处理细节。</p>
+        <pre><code>import requests
+
+def ask(prompt: str) -> str:
+    r = requests.post(
+        "http://127.0.0.1:11434/api/chat",
+        json={"model": "qwen", "messages": [{"role": "user", "content": prompt}]},
+        timeout=120,
+    )
+    return r.json()["message"]["content"]</code></pre>
+        <p>就这么点东西,但它是整个系统里我最满意的部分:模型换哪个版本,只需要改一个字符串,上层代码一行不动。</p>
+
+        <h2>几个真实的坑</h2>
+        <ul>
+            <li>磁盘:装之前一定先看空间,模型文件比想象的大。</li>
+            <li>内存:模型加载时会瞬间吃掉一大块内存,小内存的机器容易直接被 OOM 杀掉。</li>
+            <li>超时:大一点的模型第一次回复可能十几秒,客户端超时时间给小了会误以为挂了。</li>
+            <li>安全:Ollama 默认只听本机回环地址,这是对的。别图方便把它直接暴露到公网。</li>
+        </ul>
+
+        <h2>最后</h2>
+        <p>整个部署到现在一直稳定跑着,我的几个小工具都靠它。它不是什么高深的架构,就是"自己的服务器 + 一个开源模型 + 一层薄接口"。但对我来说,能完全自己控制的东西,用起来就是踏实。</p>
+        <p class="no-indent">—— 阿泽,高三,时间不多,周末更新。</p>
+    </article>
+</main>
+</body>
+</html>

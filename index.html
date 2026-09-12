@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>阿泽Aza · 技术博客</title>
+    <meta name="description" content="阿泽Aza 的技术博客:高三在读,半路出家的编程爱好者。记录本地大模型部署、自建服务器运维和独立小项目的踩坑笔记。" />
+    <meta property="og:title" content="阿泽Aza · 技术博客" />
+    <meta property="og:description" content="本地大模型部署、自建服务器运维、独立小项目的踩坑笔记。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="image.png" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        /* ========== Reset & Base ========== */
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+            background: #0A0E0A;
+            color: #e0e0e0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ---------- 背景绿色径向光晕 ---------- */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 600px 400px at 20% 10%, rgba(30, 215, 96, 0.07) 0%, transparent 70%),
+                radial-gradient(ellipse 500px 500px at 80% 80%, rgba(30, 215, 96, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ---------- 网格起伏动效 ---------- */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(30, 215, 96, 0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 215, 96, 0.07) 1px, transparent 1px);
+            background-size: 56px 56px;
+            animation: gridWave 12s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gridWave {
+            0%, 100% {
+                opacity: 0.35;
+                transform: scale(1) translateY(0);
+                background-position: 0 0;
+            }
+            25% {
+                opacity: 0.6;
+                transform: scale(1.015) translateY(-1px);
+                background-position: 6px 8px;
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.025) translateY(0);
+                background-position: 0 14px;
+            }
+            75% {
+                opacity: 0.6;
+                transform: scale(1.015) translateY(1px);
+                background-position: -4px 6px;
+            }
+        }
+
+        /* ========== Utility ========== */
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        h2.section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1ED760;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h2.section-title i { font-size: 1.2rem; }
+        section { scroll-margin-top: 72px; }
+
+        /* ========== Top Nav (sticky) ========== */
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(10, 14, 10, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(30, 215, 96, 0.14);
+        }
+        .topnav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+        .topnav-brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+        .topnav-brand span { color: #1ED760; }
+        .topnav-links { display: flex; gap: 22px; }
+        .topnav-links a {
+            color: #bbb;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .topnav-links a:hover { color: #1ED760; }
+
+        /* ========== Glass Card ========== */
+        .glass {
+            background: rgba(255, 255, 255, 0.045);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(30, 215, 96, 0.18);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+        }
+        /* hover 只作用于可交互卡片,普通容器不再弹跳 */
+        .glass-interactive {
+            transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+        .glass-interactive:hover {
+            transform: translateY(-4px);
+            border-color: #1ED760;
+            box-shadow: 0 12px 40px rgba(30, 215, 96, 0.12);
+        }
+
+        /* ========== Green Button ========== */
+        .btn-green {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            background: rgba(30, 215, 96, 0.10);
+            border: 1px solid rgba(30, 215, 96, 0.30);
+            color: #1ED760;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.25s, border-color 0.25s, transform 0.2s;
+            cursor: pointer;
+        }
+        .btn-green:hover {
+            background: rgba(30, 215, 96, 0.20);
+            border-color: #1ED760;
+            transform: translateY(-2px);
+        }
+        a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+            outline: 2px solid #1ED760;
+            outline-offset: 2px;
+        }
+
+        /* ========== Header / Profile Card (Steam Style) ========== */
+        header {
+            padding: 48px 0 32px;
+        }
+        .profile-card {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 28px;
+            padding: 32px 36px;
+        }
+
+        .profile-avatar {
+            flex-shrink: 0;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid rgba(30, 215, 96, 0.5);
+            box-shadow: 0 0 20px rgba(30, 215, 96, 0.25);
+            overflow: hidden;
+            user-select: none;
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .profile-info { flex: 1; min-width: 200px; }
+        .profile-info h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .profile-info h1 span { color: #1ED760; }
+
+        .profile-status {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: rgba(30, 215, 96, 0.12);
+            border: 1px solid rgba(30, 215, 96, 0.30);
+            color: #1ED760;
+        }
+
+        .profile-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-top: 14px;
+        }
+        .profile-stats .stat-item {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        .profile-stats .stat-item strong {
+            display: block;
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .profile-stats .stat-item strong i { color: #1ED760; margin-right: 4px; }
+
+        /* ========== Blog Posts (hero) ========== */
+        .posts-section { padding: 8px 0 32px; }
+        .posts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .post-card {
+            padding: 22px 26px;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .post-card:hover { text-decoration: none; }
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.8rem;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .post-meta .post-date { color: #1ED760; font-weight: 500; }
+        .post-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+            transition: color 0.2s;
+        }
+        .post-card:hover h3 { color: #1ED760; }
+        .post-card p {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin: 0 0 12px;
+        }
+        .post-card .post-read {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #1ED760;
+        }
+        .post-card .post-read i { font-size: 0.75rem; }
+
+        /* ========== About Me ========== */
+        .about-section { padding: 8px 0 32px; }
+        .about-card {
+            padding: 28px 32px;
+            line-height: 1.9;
+            font-size: 1rem;
+            color: #d0d0d0;
+        }
+        .about-card p { text-indent: 2em; }
+        .about-card .highlight { color: #1ED760; font-weight: 500; }
+
+        /* ========== Projects (secondary) ========== */
+        .projects-section { padding: 8px 0 32px; }
+
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            padding: 24px 26px;
+            display: flex;
+            flex-direction: column;
+        }
+        .project-card h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .project-card h3 i { color: #1ED760; margin-right: 8px; font-size: 1rem; }
+        .project-card p {
+            font-size: 0.88rem;
+            color: #b0b0b0;
+            flex: 1;
+            margin-bottom: 18px;
+        }
+        .project-card .btn-green { align-self: flex-start; }
+
+        .project-card.github-card {
+            border-color: rgba(200, 200, 200, 0.2);
+        }
+        .project-card.github-card:hover { border-color: #1ED760; }
+
+        /* ========== Tech Stack ========== */
+        .tech-section { padding: 8px 0 32px; }
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .tech-tag {
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            border: 1px solid rgba(30, 215, 96, 0.25);
+            background: rgba(30, 215, 96, 0.06);
+            color: #ccc;
+        }
+
+        /* ========== Contact ========== */
+        .contact-section { padding: 8px 0 32px; }
+        .contact-card {
+            padding: 28px 32px;
+        }
+        .contact-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 4px;
+        }
+        .contact-form input,
+        .contact-form textarea {
+            flex: 1 1 260px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.25s;
+        }
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: #1ED760;
+        }
+        .contact-form textarea {
+            flex-basis: 100%;
+            min-height: 80px;
+            resize: vertical;
+        }
+        .contact-form input::placeholder,
+        .contact-form textarea::placeholder { color: #999; }
+        .contact-note {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #999;
+        }
+        .contact-note a { color: #1ED760; }
+
+        /* ========== Footer ========== */
+        footer {
+            padding: 32px 0 48px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin-top: 16px;
+        }
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .footer-links a {
+            color: #bbb;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: #1ED760; }
+
+        .footer-bottom {
+            text-align: center;
+            color: #8a8a8a;
+            font-size: 0.8rem;
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 640px) {
+            .profile-card { flex-direction: column; text-align: center; padding: 24px 20px; }
+            .profile-stats { justify-content: center; }
+            .project-grid { grid-template-columns: 1fr; }
+            .contact-form input { flex-basis: 100%; }
+            header { padding-top: 28px; }
+            .topnav-links { gap: 14px; }
+        }
+
+        /* ========== Reduced Motion ========== */
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            body::after { animation: none; }
+            .glass-interactive, .btn-green { transition: none; }
+            .glass-interactive:hover, .btn-green:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="topnav" aria-label="主导航">
+    <div class="container">
+        <a class="topnav-brand" href="#top">阿泽<span>Aza</span></a>
+        <div class="topnav-links">
+            <a href="#posts">文章</a>
+            <a href="#about">关于我</a>
+            <a href="#projects">作品</a>
+            <a href="#contact">联系</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" id="top">
+
+    <!-- ==================== HEADER / PROFILE CARD ==================== -->
+    <header>
+        <div class="profile-card glass">
+            <div class="profile-avatar">
+                <img src="image.png" alt="阿泽Aza 头像" width="120" height="120" />
+            </div>
+            <div class="profile-info">
+                <h1>阿泽<span>Aza</span></h1>
+                <div class="profile-status">
+                    <i class="fa-solid fa-circle" aria-hidden="true" style="font-size:0.5rem; vertical-align:middle; margin-right:4px; color:#1ED760;"></i>
+                    高三在读 · 周末更新
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <strong><i class="fa-solid fa-pen-nib" aria-hidden="true"></i> 3</strong>
+                        技术笔记
+                    </div>
+                    <div class="stat-item">
+                        <strong><i class="fa-solid fa-code" aria-hidden="true"></i> 5</strong>
+                        小项目
+                    </div>
+                    <div class="stat-item">
+                        <strong><i class="fa-solid fa-clock" aria-hidden="true"></i> 4 年+</strong>
+                        自学编程
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== BLOG POSTS (hero) ==================== -->
+    <section class="posts-section" id="posts">
+        <h2 class="section-title"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i> 技术笔记</h2>
+        <div class="posts-list">
+
+            <article class="post-card glass glass-interactive">
+                <a href="posts/ollama-qwen-local.html" style="display:block; color:inherit; text-decoration:none;">
+                    <div class="post-meta">
+                        <span class="post-date">2026-08-20</span>
+                        <span>本地部署 · Ollama · Qwen</span>
+                    </div>
+                    <h3>在自己服务器上跑 Qwen:一次真实的本地大模型部署</h3>
+                    <p>从装 Ollama、选模型、限流,到写成 REST 接口给自己用——一个高三学生把开源大模型搬上自己 VPS 的全过程,包括第一次拉模型时差点把磁盘撑爆。</p>
+                    <span class="post-read">阅读全文 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </article>
+
+            <article class="post-card glass glass-interactive">
+                <a href="posts/service-pressure.html" style="display:block; color:inherit; text-decoration:none;">
+                    <div class="post-meta">
+                        <span class="post-date">2026-07-30</span>
+                        <span>运维 · 监控 · 告警</span>
+                    </div>
+                    <h3>ServicePressure:给自己写的服务器监控,先救了自己</h3>
+                    <p>凌晨三点,服务器负载打满,我却毫不知情。这篇记录了我为什么决定写 ServicePressure、它怎么追踪负载/内存/磁盘,以及告警通知是怎么推到我手机上的。</p>
+                    <span class="post-read">阅读全文 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </article>
+
+            <article class="post-card glass glass-interactive">
+                <a href="posts/first-year-lessons.html" style="display:block; color:inherit; text-decoration:none;">
+                    <div class="post-meta">
+                        <span class="post-date">2026-07-12</span>
+                        <span>随笔 · 自学</span>
+                    </div>
+                    <h3>从连变量都不懂到现在:一个野路子自学的这几年</h3>
+                    <p>初中第一次打开 Python 时,我连变量是什么都不知道。这几年没有系统课程,全靠自己一行一行敲、一个 bug 一个 bug 修。这篇聊聊野路子自学踩过的坑,和那些回头看觉得庆幸的习惯。</p>
+                    <span class="post-read">阅读全文 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- ==================== ABOUT ME ==================== -->
+    <section class="about-section" id="about">
+        <h2 class="section-title"><i class="fa-solid fa-user" aria-hidden="true"></i> 关于我</h2>
+        <div class="glass about-card">
+            <p>
+                大家好啊，我是阿泽<span class="highlight">Aza</span>，一个半路出家的编程爱好者。
+                从初中开始自学 <span class="highlight">Python</span>，一路跌跌撞撞走到了现在。
+                从最开始连变量是什么都搞不清楚的小白，到现在能独立开发一些小工具网站，回头看看还挺有成就感的。
+            </p>
+            <p style="margin-top:14px;">
+                我特别喜欢捣鼓 <span class="highlight">AI 本地部署</span>，在自己服务器上跑开源模型，感觉很酷。
+                可能每个项目都不算大，但都是自己一行一行敲出来的，看着它们稳定运行，那种 <span class="highlight">成就感</span> 是无可替代的。
+            </p>
+            <p style="margin-top:14px;">
+                目前高三了，时间不多。但还是挤出一点时间捣鼓这些。<br />
+                希望能一直保持这份热爱，将来成为一个真正能独立做出好东西的开发者。
+            </p>
+        </div>
+    </section>
+
+    <!-- ==================== PROJECTS (secondary) ==================== -->
+    <section class="projects-section" id="projects">
+        <h2 class="section-title"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> 作品项目</h2>
+        <div class="project-grid">
+
+            <!-- 项目 1 -->
+            <div class="glass glass-interactive project-card">
+                <h3><i class="fa-solid fa-music" aria-hidden="true"></i> AzKpop</h3>
+                <p>Kpop 音乐播放器 —— 韩流音乐在线试听界面，支持播放列表与搜索。</p>
+                <a href="https://azkpop.azayu.top" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> 直达链接
+                </a>
+            </div>
+
+            <!-- 项目 2 -->
+            <div class="glass glass-interactive project-card">
+                <h3><i class="fa-solid fa-key" aria-hidden="true"></i> AzApp Login</h3>
+                <p>统一登录通行证 —— 让多个子应用共用一套账号体系。</p>
+                <a href="https://azapplogin.azayu.top" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> 直达链接
+                </a>
+            </div>
+
+            <!-- 项目 3 -->
+            <div class="glass glass-interactive project-card">
+                <h3><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> ServicePressure</h3>
+                <p>服务器状态监测 —— 实时追踪负载、内存与磁盘使用，支持告警通知。</p>
+                <a href="https://servicepressure.azayu.top" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> 直达链接
+                </a>
+            </div>
+
+            <!-- 项目 4 -->
+            <div class="glass glass-interactive project-card">
+                <h3><i class="fa-solid fa-compact-disc" aria-hidden="true"></i> AzMusic</h3>
+                <p>音乐平台 —— Web / Windows / 安卓三端播放器，支持播放列表、排行榜与 AI 批量导入。</p>
+                <a href="https://azmusic.azayu.top" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> 直达链接
+                </a>
+            </div>
+
+            <!-- 项目 5 -->
+            <div class="glass glass-interactive project-card">
+                <h3><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Monitor</h3>
+                <p>安卓端设备监控客户端 —— 实时追踪地理位置、WiFi 和流量使用，支持告警通知。</p>
+                <a href="https://github.com/chapp-666/monitor" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 仓库
+                </a>
+            </div>
+
+            <!-- GitHub -->
+            <div class="glass glass-interactive project-card github-card">
+                <h3><i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 开源</h3>
+                <p>查看我的全部开源项目与代码仓库，欢迎 Star &amp; Fork！</p>
+                <a href="https://github.com/chapp-666" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> 前往 GitHub
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ==================== TECH STACK ==================== -->
+    <section class="tech-section" id="tech">
+        <h2 class="section-title"><i class="fa-solid fa-microchip" aria-hidden="true"></i> 技术栈</h2>
+        <div class="glass" style="padding:20px 24px;">
+            <div class="tech-tags">
+                <span class="tech-tag">Python</span>
+                <span class="tech-tag">HTML / CSS / JS</span>
+                <span class="tech-tag">Linux</span>
+                <span class="tech-tag">Git</span>
+                <span class="tech-tag">Ollama</span>
+                <span class="tech-tag">Flask</span>
+                <span class="tech-tag">Nginx</span>
+                <span class="tech-tag">Docker</span>
+                <span class="tech-tag">MySQL</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CONTACT ==================== -->
+    <section class="contact-section" id="contact">
+        <h2 class="section-title"><i class="fa-solid fa-envelope" aria-hidden="true"></i> 联系我</h2>
+        <div class="glass contact-card">
+            <form class="contact-form" action="mailto:1325109145@qq.com?subject=来自阿泽博客的消息" method="post" enctype="text/plain">
+                <label class="sr-only" for="cf-name">你的名字（选填）</label>
+                <input type="text" id="cf-name" name="name" placeholder="你的名字（选填）" autocomplete="name" />
+                <label class="sr-only" for="cf-email">你的邮箱（选填）</label>
+                <input type="email" id="cf-email" name="email" placeholder="你的邮箱（选填）" autocomplete="email" />
+                <label class="sr-only" for="cf-message">留言内容</label>
+                <textarea id="cf-message" name="message" placeholder="说点什么……" required></textarea>
+                <button type="submit" class="btn-green" style="border:none; font-family:inherit;">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> 发送
+                </button>
+            </form>
+            <p class="contact-note">
+                发送后会打开你设备上的邮件应用。没有邮件应用的话，也可以直接写信到
+                <a href="mailto:1325109145@qq.com?subject=来自阿泽博客的消息">1325109145@qq.com</a>。
+                会回，不急。
+            </p>
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer>
+        <div class="footer-links">
+            <a href="#posts">技术笔记</a>
+            <a href="#about">关于我</a>
+            <a href="#projects">作品项目</a>
+            <a href="#tech">技术栈</a>
+            <a href="https://github.com/chapp-666" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="footer-bottom">
+            &copy; <span id="year">2026</span> 阿泽Aza · Built with <i class="fa-solid fa-heart" style="color:#1ED760;" aria-hidden="true"></i>
+        </div>
+    </footer>
+
+</div><!-- /.container -->
+
+<!-- 极简 JS：动态年份 + 平滑滚动锚点（浏览器已支持 scroll-behavior，此处降级备用） -->
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            const id = a.getAttribute('href');
+            if (!id || id === '#') return;
+            const el = document.querySelector(id);
+            if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }); }
+        });
+    });
+</script>
+
+</body>
+</html>
