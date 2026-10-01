@@ -5,6 +5,7 @@
 ## ✨ 特点
 
 - **纯静态** — 没有框架、没有构建步骤，改完 HTML 直接刷新
+- **GitHub 热力图** — 首页每次打开实时拉取 GitHub 贡献数据渲染，无需后端与构建
 - **轻量** — 整站体积只有几十 KB
 - **自适应** — 手机 / 平板 / 桌面都可读
 - **深色阅读体验** — 长文排版针对屏幕阅读优化
@@ -16,6 +17,10 @@ azblog/
 ├── index.html                     # 首页（文章列表）
 ├── favicon.svg                    # 站点图标
 └── posts/
+    ├── azcode.html                # AzCode:让模型直接操作你自己的设备
+    ├── azappapi.html              # AzappApi:一个服务端骨架,顺手长出了 AI 网关
+    ├── azapplogin.html            # AzLogin:让两个站点共用一套账号
+    ├── dbc.html                   # dbc:用 Kotlin 原生写一个 DeepSeek 安卓客户端
     ├── first-year-lessons.html    # 入行一年，我学到的几件事
     ├── ollama-qwen-local.html     # 用 Ollama 在本地跑 Qwen
     └── service-pressure.html      # 服务压力监控系统的由来

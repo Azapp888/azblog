@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A0E0A" />
     <title>阿泽Aza · 技术博客</title>
     <meta name="description" content="阿泽Aza 的技术博客:高三在读,半路出家的编程爱好者。记录本地大模型部署、自建服务器运维和独立小项目的踩坑笔记。" />
     <meta property="og:title" content="阿泽Aza · 技术博客" />
@@ -288,6 +289,10 @@
             color: #1ED760;
         }
         .post-card .post-read i { font-size: 0.75rem; }
+        .posts-more { display: flex; flex-direction: column; gap: 16px; }
+        .posts-more[hidden] { display: none; }
+        .posts-actions { display: flex; justify-content: center; margin-top: 4px; }
+        #toggle-posts i { transition: transform 0.25s; }
 
         /* ========== About Me ========== */
         .about-section { padding: 8px 0 32px; }
@@ -333,6 +338,10 @@
             border-color: rgba(200, 200, 200, 0.2);
         }
         .project-card.github-card:hover { border-color: #1ED760; }
+
+        .project-grid:not(.expanded) .project-extra { display: none; }
+        .projects-actions { grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 4px; }
+        #toggle-projects i { transition: transform 0.25s; }
 
         /* ========== Tech Stack ========== */
         .tech-section { padding: 8px 0 32px; }
@@ -419,14 +428,114 @@
             font-size: 0.8rem;
         }
 
-        /* ========== Responsive ========== */
+        /* ========== GitHub Heatmap ========== */
+        .activity-section { padding: 8px 0 32px; }
+        .heatmap-card { padding: 24px 26px; --cell: 12px; }
+        .heatmap-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+        .heatmap-total { color: #b0b0b0; font-size: 0.9rem; }
+        .heatmap-total strong { color: #1ED760; font-size: 1.1rem; }
+        .heatmap-state { color: #999; font-size: 0.82rem; }
+        .heatmap-state a { color: #1ED760; }
+        .heatmap-scroll { overflow-x: auto; padding-bottom: 6px; }
+        .heatmap-inner { display: inline-flex; flex-direction: column; gap: 8px; }
+        .heatmap-months {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: var(--cell);
+            gap: 3px;
+            margin-left: 30px;
+            font-size: 0.7rem;
+            color: #8a8a8a;
+        }
+        .heatmap-months span { white-space: nowrap; }
+        .heatmap-body { display: flex; gap: 8px; }
+        .heatmap-weekdays {
+            display: grid;
+            grid-template-rows: repeat(7, var(--cell));
+            gap: 3px;
+            width: 22px;
+            font-size: 0.68rem;
+            color: #8a8a8a;
+            text-align: right;
+        }
+        .heatmap-weekdays span { line-height: var(--cell); }
+        .heatmap-grid {
+            display: grid;
+            grid-template-rows: repeat(7, var(--cell));
+            grid-auto-flow: column;
+            grid-auto-columns: var(--cell);
+            gap: 3px;
+        }
+        .heatmap-cell {
+            width: var(--cell);
+            height: var(--cell);
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .heatmap-cell.l1 { background: rgba(30, 215, 96, 0.28); }
+        .heatmap-cell.l2 { background: rgba(30, 215, 96, 0.48); }
+        .heatmap-cell.l3 { background: rgba(30, 215, 96, 0.72); }
+        .heatmap-cell.l4 { background: #1ED760; box-shadow: 0 0 6px rgba(30, 215, 96, 0.45); }
+        .heatmap-cell:hover { outline: 1px solid #1ED760; outline-offset: 1px; }
+        .heatmap-foot {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .heatmap-legend { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #8a8a8a; }
+        .heatmap-legend .heatmap-cell { cursor: default; }
+
+        /* ========== Responsive (Mobile) ========== */
         @media (max-width: 640px) {
-            .profile-card { flex-direction: column; text-align: center; padding: 24px 20px; }
-            .profile-stats { justify-content: center; }
-            .project-grid { grid-template-columns: 1fr; }
+            html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+            a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+            .container { padding: 0 16px; }
+
+            /* 顶栏：移动端保留品牌栏，隐藏菜单链接 */
+            .topnav-links { display: none; }
+
+            header { padding: 18px 0 24px; }
+            .profile-card { flex-direction: column; text-align: center; padding: 20px 18px; gap: 12px; }
+            .profile-avatar { width: 72px; height: 72px; }
+            .profile-info h1 { font-size: 1.45rem; }
+            .profile-stats { justify-content: center; gap: 20px; }
+
+            h2.section-title { font-size: 1.2rem; margin-bottom: 16px; }
+            section { scroll-margin-top: 60px; }
+            .posts-section, .about-section, .projects-section,
+            .tech-section, .contact-section, .activity-section { padding: 6px 0 24px; }
+
+            .post-card { padding: 18px; }
+            .post-card h3 { font-size: 1.08rem; }
+            .post-meta { flex-wrap: wrap; gap: 6px 12px; }
+            .about-card, .contact-card { padding: 22px 18px; }
+            .about-card { font-size: 0.95rem; line-height: 1.85; }
+
+            .project-grid { grid-template-columns: 1fr; gap: 16px; }
+            .project-card { padding: 20px 18px; }
+
+            .heatmap-card { --cell: 9px; padding: 18px 14px; }
+            .heatmap-head { margin-bottom: 14px; }
+            .heatmap-foot { margin-top: 14px; gap: 10px; }
+
             .contact-form input { flex-basis: 100%; }
-            header { padding-top: 28px; }
-            .topnav-links { gap: 14px; }
+            .btn-green { padding: 11px 20px; min-height: 44px; }
+
+            footer { padding: 26px 0 36px; }
+            .footer-links { gap: 14px 18px; }
+
+            /* 窄屏关闭全屏网格动效，减少耗电与重绘 */
+            body::after { animation: none; opacity: 0.45; }
         }
 
         /* ========== Reduced Motion ========== */
@@ -446,6 +555,7 @@
         <a class="topnav-brand" href="#top">阿泽<span>Aza</span></a>
         <div class="topnav-links">
             <a href="#posts">文章</a>
+            <a href="#activity">热力图</a>
             <a href="#about">关于我</a>
             <a href="#projects">作品</a>
             <a href="#contact">联系</a>
@@ -469,11 +579,11 @@
                 </div>
                 <div class="profile-stats">
                     <div class="stat-item">
-                        <strong><i class="fa-solid fa-pen-nib" aria-hidden="true"></i> 3</strong>
+                        <strong><i class="fa-solid fa-pen-nib" aria-hidden="true"></i> 7</strong>
                         技术笔记
                     </div>
                     <div class="stat-item">
-                        <strong><i class="fa-solid fa-code" aria-hidden="true"></i> 5</strong>
+                        <strong><i class="fa-solid fa-code" aria-hidden="true"></i> 10</strong>
                         小项目
                     </div>
                     <div class="stat-item">
@@ -485,10 +595,96 @@
         </div>
     </header>
 
+    <!-- ==================== GITHUB ACTIVITY HEATMAP ==================== -->
+    <section class="activity-section" id="activity">
+        <h2 class="section-title"><i class="fa-solid fa-fire" aria-hidden="true"></i> 代码热力图</h2>
+        <div class="glass heatmap-card">
+            <div class="heatmap-head">
+                <div class="heatmap-total">最近一年共 <strong id="heatmap-total">--</strong> 次贡献</div>
+                <div class="heatmap-state" id="heatmap-state">正在从 GitHub 加载…</div>
+            </div>
+            <div class="heatmap-scroll">
+                <div class="heatmap-inner">
+                    <div class="heatmap-months" id="heatmap-months" aria-hidden="true"></div>
+                    <div class="heatmap-body">
+                        <div class="heatmap-weekdays" aria-hidden="true">
+                            <span></span><span>一</span><span></span><span>三</span><span></span><span>五</span><span></span>
+                        </div>
+                        <div class="heatmap-grid" id="heatmap-grid" role="img" aria-label="GitHub 最近一年贡献热力图"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="heatmap-foot">
+                <a class="btn-green" href="https://github.com/Azapp888" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> 我的 GitHub
+                </a>
+                <div class="heatmap-legend">
+                    <span>少</span>
+                    <span class="heatmap-cell"></span>
+                    <span class="heatmap-cell l1"></span>
+                    <span class="heatmap-cell l2"></span>
+                    <span class="heatmap-cell l3"></span>
+                    <span class="heatmap-cell l4"></span>
+                    <span>多</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ==================== BLOG POSTS (hero) ==================== -->
     <section class="posts-section" id="posts">
         <h2 class="section-title"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i> 技术笔记</h2>
         <div class="posts-list">
+
+            <article class="post-card glass glass-interactive">
+                <a href="posts/azcode.html" style="display:block; color:inherit; text-decoration:none;">
+                    <div class="post-meta">
+                        <span class="post-date">2026-09-28</span>
+                        <span>AI Agent · 自动化 · 三端</span>
+                    </div>
+                    <h3>AzCode:让模型直接操作你自己的设备</h3>
+                    <p>用自然语言描述任务,模型决策后直接操作当前设备——Android / Windows / Linux 三端,共用一套 Agent 核心与插件市场,还顺手把大模型的缓存命中做到了极致。</p>
+                    <span class="post-read">阅读全文 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </article>
+
+            <article class="post-card glass glass-interactive">
+                <a href="posts/azappapi.html" style="display:block; color:inherit; text-decoration:none;">
+                    <div class="post-meta">
+                        <span class="post-date">2026-09-22</span>
+                        <span>后端 · Express · AI 网关</span>
+                    </div>
+                    <h3>AzappApi:一个服务端骨架,顺手长出了 AI 网关</h3>
+                    <p>每次起新项目都要重搭一遍登录、错误处理、日志——把它们抽成开箱即用的 Express 骨架,结果顺手塞进了一个 OpenAI 兼容的多家模型聚合网关。</p>
+                    <span class="post-read">阅读全文 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </article>
+
+            <article class="post-card glass glass-interactive">
+                <a href="posts/azapplogin.html" style="display:block; color:inherit; text-decoration:none;">
+                    <div class="post-meta">
+                        <span class="post-date">2026-09-18</span>
+                        <span>后端 · 认证 · OAuth 2.0</span>
+                    </div>
+                    <h3>AzLogin:让两个站点共用一套账号</h3>
+                    <p>Azapp 与 AzKpop 各一套账号太麻烦,于是做了统一用户中心:一号通行、跨站会话共享、标准 OAuth 2.0,还支持在 MySQL / SQLite / JSON 三种存储间切换。</p>
+                    <span class="post-read">阅读全文 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </article>
+
+            <div class="posts-more" id="posts-more" hidden>
+
+            <article class="post-card glass glass-interactive">
+                <a href="posts/dbc.html" style="display:block; color:inherit; text-decoration:none;">
+                    <div class="post-meta">
+                        <span class="post-date">2026-09-15</span>
+                        <span>Android · Kotlin · AI 客户端</span>
+                    </div>
+                    <h3>dbc:用 Kotlin 原生写一个 DeepSeek 安卓客户端</h3>
+                    <p>不套 WebView,用 Kotlin + Jetpack Compose 从零写一个 DeepSeek 安卓客户端:思维链、联网搜索、技能挂载、图片识别,API Key 只保存在本地。</p>
+                    <span class="post-read">阅读全文 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </article>
 
             <article class="post-card glass glass-interactive">
                 <a href="posts/ollama-qwen-local.html" style="display:block; color:inherit; text-decoration:none;">
@@ -526,6 +722,14 @@
                 </a>
             </article>
 
+            </div>
+
+            <div class="posts-actions">
+                <button class="btn-green" id="toggle-posts" type="button" aria-expanded="false" aria-controls="posts-more">
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i> 查看更多
+                </button>
+            </div>
+
         </div>
     </section>
 
@@ -553,6 +757,15 @@
     <section class="projects-section" id="projects">
         <h2 class="section-title"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> 作品项目</h2>
         <div class="project-grid">
+
+            <!-- 项目：AzCode（最新） -->
+            <div class="glass glass-interactive project-card">
+                <h3><i class="fa-solid fa-robot" aria-hidden="true"></i> AzCode</h3>
+                <p>本机自动化助手 —— 用自然语言下达任务,模型决策后直接操作设备,覆盖 Android / Windows / Linux 三端。</p>
+                <a href="https://github.com/Azapp888/AzCode" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 仓库
+                </a>
+            </div>
 
             <!-- 项目 1 -->
             <div class="glass glass-interactive project-card">
@@ -590,22 +803,64 @@
                 </a>
             </div>
 
-            <!-- 项目 5 -->
-            <div class="glass glass-interactive project-card">
+            <!-- 项目：Monitor（默认收起） -->
+            <div class="glass glass-interactive project-card project-extra">
                 <h3><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Monitor</h3>
                 <p>安卓端设备监控客户端 —— 实时追踪地理位置、WiFi 和流量使用，支持告警通知。</p>
-                <a href="https://github.com/chapp-666/monitor" target="_blank" rel="noopener" class="btn-green">
+                <a href="https://github.com/Azapp888/monitor" target="_blank" rel="noopener" class="btn-green">
                     <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 仓库
                 </a>
             </div>
 
-            <!-- GitHub -->
+            <!-- 项目：azpocker（默认收起） -->
+            <div class="glass glass-interactive project-card project-extra">
+                <h3><i class="fa-solid fa-dice" aria-hidden="true"></i> azpocker</h3>
+                <p>网页版斗地主 —— 经典 + 自由三带二玩法，同屏 / 局域网对战，内置 DeepSeek AI 对手。</p>
+                <a href="https://github.com/Azapp888/azpocker" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 仓库
+                </a>
+            </div>
+
+            <!-- 项目：AzappApi（默认收起） -->
+            <div class="glass glass-interactive project-card project-extra">
+                <h3><i class="fa-solid fa-server" aria-hidden="true"></i> AzappApi</h3>
+                <p>Azapp 服务端 API 骨架 —— Express + JWT 鉴权 + 统一响应 / 错误处理 + 健康检查，开箱即用。</p>
+                <a href="https://github.com/Azapp888/AzappApi" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 仓库
+                </a>
+            </div>
+
+            <!-- 项目：dbc（默认收起） -->
+            <div class="glass glass-interactive project-card project-extra">
+                <h3><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> dbc</h3>
+                <p>DeepSeek 安卓客户端（Kotlin + Jetpack Compose 原生实现）—— 思维链 / 联网搜索 / 技能挂载 / 图片识别。</p>
+                <a href="https://github.com/Azapp888/dbc" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 仓库
+                </a>
+            </div>
+
+            <!-- 项目：个人主页 & 博客（azblog 源码；默认收起） -->
+            <div class="glass glass-interactive project-card project-extra">
+                <h3><i class="fa-solid fa-id-card" aria-hidden="true"></i> Azapp · 个人主页 &amp; 博客</h3>
+                <p>开发者作品集主页与本站源码 —— 深色极客风 + Spotify 绿，纯静态 HTML（源码仓库 azblog）。</p>
+                <a href="https://github.com/Azapp888/azblog" target="_blank" rel="noopener" class="btn-green">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 仓库
+                </a>
+            </div>
+
+            <!-- GitHub：永远作为最后一个项目显示 -->
             <div class="glass glass-interactive project-card github-card">
                 <h3><i class="fa-brands fa-github" aria-hidden="true"></i> GitHub 开源</h3>
                 <p>查看我的全部开源项目与代码仓库，欢迎 Star &amp; Fork！</p>
-                <a href="https://github.com/chapp-666" target="_blank" rel="noopener" class="btn-green">
+                <a href="https://github.com/Azapp888" target="_blank" rel="noopener" class="btn-green">
                     <i class="fa-brands fa-github" aria-hidden="true"></i> 前往 GitHub
                 </a>
+            </div>
+
+            <div class="projects-actions">
+                <button class="btn-green" id="toggle-projects" type="button" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i> 查看更多
+                </button>
             </div>
 
         </div>
@@ -656,10 +911,11 @@
     <footer>
         <div class="footer-links">
             <a href="#posts">技术笔记</a>
+            <a href="#activity">代码热力图</a>
             <a href="#about">关于我</a>
             <a href="#projects">作品项目</a>
             <a href="#tech">技术栈</a>
-            <a href="https://github.com/chapp-666" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/Azapp888" target="_blank" rel="noopener">GitHub</a>
         </div>
         <div class="footer-bottom">
             &copy; <span id="year">2026</span> 阿泽Aza · Built with <i class="fa-solid fa-heart" style="color:#1ED760;" aria-hidden="true"></i>
@@ -679,6 +935,87 @@
             if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }); }
         });
     });
+
+    /* ===== GitHub 贡献热力图：每次打开页面实时拉取 ===== */
+    (function () {
+        const USER = 'Azapp888';
+        const API = 'https://github-contributions-api.jogruber.de/v4/' + USER + '?y=last';
+        const grid = document.getElementById('heatmap-grid');
+        const monthsEl = document.getElementById('heatmap-months');
+        const totalEl = document.getElementById('heatmap-total');
+        const stateEl = document.getElementById('heatmap-state');
+        if (!grid) return;
+
+        fetch(API)
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(data => render(data.contributions, data.total))
+            .catch(() => {
+                stateEl.innerHTML = '加载失败，请前往 <a href="https://github.com/' + USER + '" target="_blank" rel="noopener">GitHub 主页</a> 查看';
+                totalEl.textContent = '--';
+            });
+
+        function render(days, total) {
+            if (!Array.isArray(days) || !days.length) throw new Error('empty');
+            const weeks = [];
+            for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+
+            monthsEl.innerHTML = '';
+            let lastMonth = -1;
+            weeks.forEach(week => {
+                const m = new Date(week[0].date + 'T00:00:00').getMonth();
+                const span = document.createElement('span');
+                if (m !== lastMonth) { lastMonth = m; span.textContent = (m + 1) + '月'; }
+                monthsEl.appendChild(span);
+            });
+
+            const frag = document.createDocumentFragment();
+            days.forEach(day => {
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell' + (day.level > 0 ? ' l' + day.level : '');
+                cell.title = day.date + '：' + day.count + ' 次贡献';
+                frag.appendChild(cell);
+            });
+            grid.innerHTML = '';
+            grid.appendChild(frag);
+
+            const sum = days.reduce((s, d) => s + d.count, 0);
+            totalEl.textContent = (total && total.lastYear != null) ? total.lastYear : sum;
+            stateEl.textContent = '数据来自 GitHub · 每次打开自动更新';
+        }
+    })();
+
+    /* ===== 技术笔记：查看更多 / 收起 ===== */
+    (function () {
+        const btn = document.getElementById('toggle-posts');
+        const more = document.getElementById('posts-more');
+        if (!btn || !more) return;
+        btn.addEventListener('click', function () {
+            const isOpen = !more.hasAttribute('hidden');
+            if (isOpen) {
+                more.setAttribute('hidden', '');
+                btn.setAttribute('aria-expanded', 'false');
+                btn.innerHTML = '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i> 查看更多';
+            } else {
+                more.removeAttribute('hidden');
+                btn.setAttribute('aria-expanded', 'true');
+                btn.innerHTML = '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i> 收起';
+            }
+        });
+    })();
+
+    /* ===== 作品项目：查看更多 / 收起 ===== */
+    (function () {
+        const btn = document.getElementById('toggle-projects');
+        const grid = document.querySelector('.project-grid');
+        if (!btn || !grid) return;
+        btn.addEventListener('click', function () {
+            const isOpen = grid.classList.toggle('expanded');
+            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            btn.innerHTML = isOpen
+                ? '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i> 收起'
+                : '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i> 查看更多';
+        });
+    })();
 </script>
 
 </body>

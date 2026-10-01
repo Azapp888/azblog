@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0A0E0A" />
-    <title>从连变量都不懂到现在:一个野路子自学的这几年 · 阿泽Aza</title>
-    <meta name="description" content="初中第一次打开 Python 时,我连变量是什么都不知道。野路子自学踩过的坑,和回头看觉得庆幸的习惯。" />
+    <title>dbc:用 Kotlin 原生写一个 DeepSeek 安卓客户端 · 阿泽Aza</title>
+    <meta name="description" content="不套 WebView,用 Kotlin + Jetpack Compose 从零写一个 DeepSeek 安卓客户端:思维链、联网搜索、技能挂载、图片识别,API Key 只存在本地。" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
@@ -45,6 +45,25 @@
         article h2 { font-size: 1.25rem; color: #1ED760; margin: 36px 0 14px; }
         article p { margin-bottom: 16px; color: #d0d0d0; text-indent: 2em; }
         article p.no-indent { text-indent: 0; }
+        article pre {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(30, 215, 96, 0.15);
+            border-radius: 10px;
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 0 0 18px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        article code {
+            font-family: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+            background: rgba(30, 215, 96, 0.10);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #1ED760;
+        }
+        article pre code { background: none; padding: 0; color: #d0d0d0; }
         article ul { margin: 0 0 16px 2em; color: #d0d0d0; }
         article li { margin-bottom: 6px; }
         .back-link {
@@ -102,34 +121,42 @@
     <article>
         <a class="back-link" href="../index.html#posts"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回</a>
         <div class="post-meta">
-            <span class="date">2026-07-12</span>
-            <span>随笔 · 自学</span>
+            <span class="date">2026-09-15</span>
+            <span>Android · Kotlin · AI 客户端</span>
         </div>
-        <h1>从连变量都不懂到现在:一个野路子自学的这几年</h1>
+        <h1>dbc:用 Kotlin 原生写一个 DeepSeek 安卓客户端</h1>
 
-        <p>初中那会儿,我对着教程里第一行 <code>x = 1</code>,脑子里转了很久:这个 x 到底是什么, "=" 号在这里和数学里的 "=" 好像又不一样。那个"变量到底是什么"的困惑,我大概纠结了一整个暑假才真正过去。</p>
+        <p><code>dbc</code> 是我用 Kotlin 原生写的 DeepSeek 安卓客户端。它只做一件事:用你自己的 API Key 直连 DeepSeek 官方 API,在手机上跟模型对话。我用的是 Android 原生的 Kotlin + Jetpack Compose,没有套一层 WebView,也没有内置任何密钥。</p>
 
-        <h2>野路子是怎么形成的</h2>
-        <p>没有报班,没有系统课程,也没有人带我。我的学习路径基本是:想做一个东西 → 卡住 → 搜 → 抄一个看起来能跑的 → 跑起来 → 不知道为什么能跑。回头看,这个循环里"不知道为什么能跑"的部分最危险,因为它让很多错误认知跟着代码一起存下来了。</p>
-        <p>现在我对这个循环的态度变了:抄可以,但抄完要追问"它为什么是这样"。哪怕每次只弄明白一点点,几年下来,地基是一点一点实起来的。</p>
+        <h2>为什么不用 WebView 套壳</h2>
+        <p>套壳最快,但体验是假的:流式输出会卡,键盘和输入框对不齐,返回手势也别扭。我想试试"真的是个安卓 App"是什么感觉——原生渲染每一条消息、原生处理流式输出的逐字追加。写下来确实比套壳累得多,但那种跟手的感觉值得。</p>
 
-        <h2>踩过的几个大坑</h2>
+        <h2>都做了哪些功能</h2>
         <ul>
-            <li>抄来的代码不敢改。有一阵我特别怕动别人写的代码,改一个参数就崩。后来才明白,不敢改是因为没读懂,解决办法不是更小心,而是先读懂。</li>
-            <li>把"能跑"当"对"。一个脚本跑了三个月,直到有一天数据量变大了才露出问题。能跑只是及格线,不是终点。</li>
-            <li>不记东西。早期踩的坑全忘了,同样的坑隔几个月再踩一次。后来开始写笔记(对,就是现在这个博客的前身),才发现记忆这东西是可以外包给文字的。</li>
-            <li>一个人闷头做,不给人看。做出来的东西只有我自己觉得能用,给别人一看全是问题。现在我会把页面给别人点一点,被骂一次顶自己琢磨十次。</li>
+            <li><strong>深度思考(思维链)</strong>:把模型的推理过程展示出来,不是只给最终答案。</li>
+            <li><strong>自定义思考深度</strong>:按需调节推理档位,简单问题不必浪费算力。</li>
+            <li><strong>联网搜索</strong>:让模型结合实时信息回答。</li>
+            <li><strong>技能挂载</strong>:可插拔的提示词技能系统,不同场景挂不同技能。</li>
+            <li><strong>历史会话</strong>:多会话管理,本地持久化。</li>
+            <li><strong>图片识别</strong>:拍照或选图后做多模态问答。</li>
+            <li><strong>流式输出</strong>:逐字返回,可以随时中断。</li>
         </ul>
 
-        <h2>几个回头看很庆幸的习惯</h2>
-        <ul>
-            <li>从很早就用 Git。哪怕仓库里只有一个我,每次提交前写一句"改了什么",出问题时翻记录能救命。</li>
-            <li>先让小的东西跑起来,再慢慢加。这个习惯让我从来没有被一个大项目吓退过。</li>
-            <li>出错先看报错信息,别慌。报错是免费的人工讲解,我初中那会儿最讨厌的东西,现在是我最先读的东西。</li>
-        </ul>
+        <h2>技术栈</h2>
+        <p>Kotlin + Jetpack Compose(Material 3),协程与 Flow 处理异步和流式,网络用 OkHttp + Kotlinx Serialization,本地存储用 Room / DataStore,构建脚本是 Gradle Kotlin DSL。这一套基本都是现在写安卓的标配,顺手也把协程和 Flow 的用法练熟了不少。</p>
 
-        <h2>高三以后</h2>
-        <p>现在时间比从前少得多,一周能敲代码的窗口就那么几个晚上。但我觉得这反而是好事:时间少,逼着我每次坐下来都先想清楚"这一小时我要做出什么",而不是打开编辑器漫无目的地写。效率这个东西,是被时间逼出来的。</p>
+        <h2>API Key 只在设备上</h2>
+        <p>这是我很在意的一点:App 里自己填 DeepSeek API Key,只保存在设备本地的 DataStore 里,<strong>不上传到任何第三方服务器</strong>,源码里也不含任何内置密钥。客户端这种东西,一旦把 Key 塞进包里或者过一遍自家服务器,风险就说不清了。让用户自己带 Key、Key 只留在本机,是最干净的做法。</p>
+
+        <h2>怎么构建</h2>
+        <pre><code>./gradlew assembleDebug
+# 产物：app/build/outputs/apk/debug/app-debug.apk</code></pre>
+        <p>用 Android Studio 打开目录、等 Gradle 同步完直接运行也行。需要较新版本的 Android Studio、JDK 17 和 Android SDK 35+,细节都写在仓库的 <code>BUILD.md</code> 里,踩过的坑记在 <code>FIXES.md</code>。</p>
+
+        <h2>写在最后</h2>
+        <p>这是个人自用的客户端,和深度求索公司没有隶属关系。仓库里移除了构建产物、Gradle 缓存和截图等媒体文件,代码是完整的。对我这个平时主要写 Web 的人来说,完整做一遍安卓原生 App 是次不小的挑战,也让我明白:原生和套壳的差距,最后都体现在那些小的、跟手的地方。</p>
+        <p>代码开在 GitHub 上:</p>
+        <p class="no-indent"><a href="https://github.com/Azapp888/dbc" target="_blank" rel="noopener">github.com/Azapp888/dbc</a></p>
         <p class="no-indent">—— 阿泽Aza.</p>
     </article>
 </main>

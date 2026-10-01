@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0A0E0A" />
-    <title>在自己服务器上跑 Qwen:一次真实的本地大模型部署 · 阿泽Aza</title>
-    <meta name="description" content="从装 Ollama、选模型、限流,到写成 REST 接口给自己用——把开源大模型搬上自己 VPS 的全过程。" />
+    <title>AzLogin:让两个站点共用一套账号 · 阿泽Aza</title>
+    <meta name="description" content="Azapp 与 AzKpop 各有各的账号太麻烦了——AzLogin 统一用户中心:一号通行、跨站会话共享、标准 OAuth 2.0,还能在 MySQL/SQLite/JSON 三种存储间切换。" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
@@ -121,48 +121,51 @@
     <article>
         <a class="back-link" href="../index.html#posts"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回</a>
         <div class="post-meta">
-            <span class="date">2026-08-20</span>
-            <span>本地部署 · Ollama · Qwen</span>
+            <span class="date">2026-09-18</span>
+            <span>后端 · 认证 · OAuth 2.0</span>
         </div>
-        <h1>在自己服务器上跑 Qwen:一次真实的本地大模型部署</h1>
+        <h1>AzLogin:让两个站点共用一套账号</h1>
 
-        <p>先交代背景:我有一台自己的 VPS,平时跑着几个小项目。前阵子想把开源大模型也搬上去,给自己写个小助手用。整件事花了我一个周末,中间踩的坑比想的还多。这篇把过程记下来,也给同样想折腾的人一个参考。</p>
+        <p>我手上有 Azapp 和 AzKpop 两个站点,本来各自一套账号。问题很快就来了:我自己在两个站各注册一次,记两套密码;用户也一样,换个站就得重新注册。于是我做了 <code>AzLogin</code>——一个统一用户中心,让这两个站做到"一次注册,一号通行"。</p>
 
-        <h2>为什么是自己部署,而不是直接用现成的 API</h2>
-        <p>原因很朴素:便宜,而且好玩。现成的 API 按量收费,我这种用法一个月没几个请求,付钱划不来。更重要的是,把模型装在自己机器上、看着它真的跑起来,那种感觉和"调一个接口"完全不一样。</p>
-
-        <h2>装 Ollama</h2>
-        <p>本地跑开源模型最省事的入口是 <code>Ollama</code>,一条命令装好:</p>
-        <pre><code>curl -fsSL https://ollama.com/install.sh | sh</code></pre>
-        <p>装完以后 Ollama 会在本地监听一个端口,对外提供类似 OpenAI 的接口。后面所有应用都直接打这个端口,不用关心模型本身。</p>
-
-        <h2>选模型:先被磁盘教育了一课</h2>
-        <p>我第一次直接拉了一个挺大的 Qwen 模型,结果下载进度条走完的时候,磁盘也差不多满了。这是我的失误:装之前应该先 <code>df -h</code> 看一眼剩余空间。模型文件动辄几个 G,加上日志和缓存,VPS 那点磁盘真的经不起造。</p>
-        <p>后来我换成了一个更小的量化版本,速度反而更快,日常对话完全够用。一个心得是:先跑最小的能用的,不够再往上加,别一上来就堆参数。</p>
-
-        <h2>写成接口给自己用</h2>
-        <p>模型跑起来之后,我写了一个很小的 Flask 服务,把 Ollama 的接口包一层,加上自己的逻辑(比如上下文裁剪、简单限流),这样我的小工具就能统一调它,不用各自处理细节。</p>
-        <pre><code>import requests
-
-def ask(prompt: str) -> str:
-    r = requests.post(
-        "http://127.0.0.1:11434/api/chat",
-        json={"model": "qwen", "messages": [{"role": "user", "content": prompt}]},
-        timeout=120,
-    )
-    return r.json()["message"]["content"]</code></pre>
-        <p>就这么点东西,但它是整个系统里我最满意的部分:模型换哪个版本,只需要改一个字符串,上层代码一行不动。</p>
-
-        <h2>几个真实的坑</h2>
+        <h2>它解决的核心问题</h2>
         <ul>
-            <li>磁盘:装之前一定先看空间,模型文件比想象的大。</li>
-            <li>内存:模型加载时会瞬间吃掉一大块内存,小内存的机器容易直接被 OOM 杀掉。</li>
-            <li>超时:大一点的模型第一次回复可能十几秒,客户端超时时间给小了会误以为挂了。</li>
-            <li>安全:Ollama 默认只听本机回环地址,这是对的。别图方便把它直接暴露到公网。</li>
+            <li><strong>统一账号</strong>:注册一次,Azapp / AzKpop 双站通用。</li>
+            <li><strong>统一登录 + 跨站会话共享(SSO)</strong>:登录一次,就能带着会话在各站之间跳转。</li>
+            <li><strong>标准 OAuth 2.0 授权码模式</strong>:<code>authorize</code> / <code>token</code> / <code>userinfo</code> 三个端点,第三方站用 <code>client_id</code> + <code>client_secret</code> 接入。</li>
+            <li><strong>JWT 双令牌</strong>:access token + refresh token,有效期都可配。</li>
+            <li><strong>邮箱验证码</strong>:基于 SMTP 的注册 / 找回验证。</li>
+            <li><strong>用户资料与头像</strong>:昵称、头像上传与修改。</li>
+            <li><strong>管理端</strong>:账号管理、OAuth 客户端(应用)管理、会话查看。</li>
         </ul>
 
-        <h2>最后</h2>
-        <p>整个部署到现在一直稳定跑着,我的几个小工具都靠它。它不是什么高深的架构,就是"自己的服务器 + 一个开源模型 + 一层薄接口"。但对我来说,能完全自己控制的东西,用起来就是踏实。</p>
+        <h2>为什么用 OAuth 2.0 而不是简单共享 Cookie</h2>
+        <p>一开始我想过最省事的做法:两个站读同一个 Cookie。但这在跨域、跨端的情况下很脆,而且会把手伸到别人域里。换成标准 OAuth 2.0 授权码模式之后,每个站就是一个"客户端",统一用户中心是"授权方",边界清清楚楚:谁要登录,就跳到这里授权,拿到 code 再换 token。以后要再接第三个站,也只是多注册一个客户端而已。</p>
+
+        <h2>三套存储,按环境切</h2>
+        <p>这是我在这个项目里最满意、也最费心的设计。同一套业务逻辑,做了三份存储实现:</p>
+        <ul>
+            <li><strong>MySQL</strong>:正式的服务器方案,入口是 <code>server.js</code>。</li>
+            <li><strong>SQLite</strong>:单机、轻量部署,入口是 <code>server-sqlite.js</code>。</li>
+            <li><strong>纯 JSON 文件</strong>:零依赖,最快能跑起来,入口是 <code>server-json.js</code>。想先看看效果、或者只是本地玩玩,用它就够。</li>
+        </ul>
+        <p>代码按 <code>models/</code>、<code>routes/</code>、<code>models-sqlite/</code>、<code>routes-sqlite/</code> 这样分目录,切换存储只换启动入口,上层接口完全不变。代价是要维护三份实现,但换来的是"任何环境都能落地"。</p>
+
+        <h2>怎么跑起来</h2>
+        <pre><code>npm install
+cp .env.example .env        # 按需修改数据库、SMTP、JWT 配置
+
+node server.js              # MySQL 版，默认 8001
+# node server-sqlite.js     # SQLite 版
+# node server-json.js       # JSON 版（零依赖，最快跑起来）
+
+node server-frontend.js     # 前端页面，默认 3001</code></pre>
+        <p>前端是原生 HTML5 / CSS3 / JavaScript,用 <code>server-frontend.js</code> 起静态服务并把 API 反向代理到后端。浏览器打开 <code>http://localhost:3001</code> 就是统一登录页。</p>
+
+        <h2>安全上的几条底线</h2>
+        <p>仓库里不含 <code>.env</code>(数据库密码、JWT 密钥、SMTP 授权码都在里面),也没有运行时数据、上传文件和测试账号,只保留 <code>.env.example</code> 模板。部署前必须自己生成强随机的 <code>JWT_SECRET</code>,并把 <code>ADMIN_ACCOUNTS</code>、允许互通的站点域名收紧。认证系统一旦出事就是大事,这几条没有妥协空间。</p>
+        <p>代码开在 GitHub 上:</p>
+        <p class="no-indent"><a href="https://github.com/Azapp888/AzLogin" target="_blank" rel="noopener">github.com/Azapp888/AzLogin</a></p>
         <p class="no-indent">—— 阿泽Aza.</p>
     </article>
 </main>

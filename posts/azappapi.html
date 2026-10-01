@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0A0E0A" />
-    <title>在自己服务器上跑 Qwen:一次真实的本地大模型部署 · 阿泽Aza</title>
-    <meta name="description" content="从装 Ollama、选模型、限流,到写成 REST 接口给自己用——把开源大模型搬上自己 VPS 的全过程。" />
+    <title>AzappApi:一个服务端骨架,顺手长出了 AI 网关 · 阿泽Aza</title>
+    <meta name="description" content="每次起新项目都要重搭一遍登录、错误处理、日志——于是我把它们抽成骨架,结果顺手在里面塞进了一个 OpenAI 兼容的 AI 聚合网关。" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
@@ -121,48 +121,49 @@
     <article>
         <a class="back-link" href="../index.html#posts"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回</a>
         <div class="post-meta">
-            <span class="date">2026-08-20</span>
-            <span>本地部署 · Ollama · Qwen</span>
+            <span class="date">2026-09-22</span>
+            <span>后端 · Express · AI 网关</span>
         </div>
-        <h1>在自己服务器上跑 Qwen:一次真实的本地大模型部署</h1>
+        <h1>AzappApi:一个服务端骨架,顺手长出了 AI 网关</h1>
 
-        <p>先交代背景:我有一台自己的 VPS,平时跑着几个小项目。前阵子想把开源大模型也搬上去,给自己写个小助手用。整件事花了我一个周末,中间踩的坑比想的还多。这篇把过程记下来,也给同样想折腾的人一个参考。</p>
+        <p>我做过好几个小项目,每次开头都要重新搭一遍同样的东西:跨域、请求日志、统一错误处理、JWT 鉴权、健康检查。前几次还忍着写,写到第 N 次就烦了。于是我把这些"每次都要有、但跟业务无关"的部分抽出来,做成一个开箱即用的 Express 骨架,叫 <code>AzappApi</code>。加新模块的时候,只要往里塞业务路由就行。</p>
 
-        <h2>为什么是自己部署,而不是直接用现成的 API</h2>
-        <p>原因很朴素:便宜,而且好玩。现成的 API 按量收费,我这种用法一个月没几个请求,付钱划不来。更重要的是,把模型装在自己机器上、看着它真的跑起来,那种感觉和"调一个接口"完全不一样。</p>
-
-        <h2>装 Ollama</h2>
-        <p>本地跑开源模型最省事的入口是 <code>Ollama</code>,一条命令装好:</p>
-        <pre><code>curl -fsSL https://ollama.com/install.sh | sh</code></pre>
-        <p>装完以后 Ollama 会在本地监听一个端口,对外提供类似 OpenAI 的接口。后面所有应用都直接打这个端口,不用关心模型本身。</p>
-
-        <h2>选模型:先被磁盘教育了一课</h2>
-        <p>我第一次直接拉了一个挺大的 Qwen 模型,结果下载进度条走完的时候,磁盘也差不多满了。这是我的失误:装之前应该先 <code>df -h</code> 看一眼剩余空间。模型文件动辄几个 G,加上日志和缓存,VPS 那点磁盘真的经不起造。</p>
-        <p>后来我换成了一个更小的量化版本,速度反而更快,日常对话完全够用。一个心得是:先跑最小的能用的,不够再往上加,别一上来就堆参数。</p>
-
-        <h2>写成接口给自己用</h2>
-        <p>模型跑起来之后,我写了一个很小的 Flask 服务,把 Ollama 的接口包一层,加上自己的逻辑(比如上下文裁剪、简单限流),这样我的小工具就能统一调它,不用各自处理细节。</p>
-        <pre><code>import requests
-
-def ask(prompt: str) -> str:
-    r = requests.post(
-        "http://127.0.0.1:11434/api/chat",
-        json={"model": "qwen", "messages": [{"role": "user", "content": prompt}]},
-        timeout=120,
-    )
-    return r.json()["message"]["content"]</code></pre>
-        <p>就这么点东西,但它是整个系统里我最满意的部分:模型换哪个版本,只需要改一个字符串,上层代码一行不动。</p>
-
-        <h2>几个真实的坑</h2>
+        <h2>骨架里到底装了什么</h2>
         <ul>
-            <li>磁盘:装之前一定先看空间,模型文件比想象的大。</li>
-            <li>内存:模型加载时会瞬间吃掉一大块内存,小内存的机器容易直接被 OOM 杀掉。</li>
-            <li>超时:大一点的模型第一次回复可能十几秒,客户端超时时间给小了会误以为挂了。</li>
-            <li>安全:Ollama 默认只听本机回环地址,这是对的。别图方便把它直接暴露到公网。</li>
+            <li><strong>统一响应结构</strong>:成功 <code>{ success: true, ... }</code>,失败 <code>{ success: false, message }</code>。</li>
+            <li><strong>统一错误处理</strong>:代码里抛错就会被兜住,自动返回 JSON 并带上对应的 HTTP 状态码。</li>
+            <li><strong>请求日志</strong>:方法、路径、状态码、耗时,一行一条。</li>
+            <li><strong>CORS</strong>:由 <code>CORS_ORIGINS</code> 控制允许的前端来源。</li>
+            <li><strong>JWT 鉴权中间件</strong>:标准 <code>Authorization: Bearer &lt;token&gt;</code> 写法。</li>
+            <li><strong>健康检查</strong>:<code>/api/health</code> 返回运行状态与 uptime。</li>
+            <li><strong>配置集中管理</strong>:所有环境变量统一在 <code>src/config.js</code> 读取。</li>
         </ul>
+        <pre><code>curl http://localhost:8100/api/health
+# {"success":true,"status":"ok","uptime":3,"time":"..."}</code></pre>
+        <p>加一个新模块也极简单:在 <code>src/routes/</code> 下新建一个导出了 Router 的文件,在 <code>routes/index.js</code> 里 <code>use</code> 一下,需要登录的接口挂上 <code>auth</code> 中间件,访问路径就是 <code>/api/xxx</code>。</p>
 
-        <h2>最后</h2>
-        <p>整个部署到现在一直稳定跑着,我的几个小工具都靠它。它不是什么高深的架构,就是"自己的服务器 + 一个开源模型 + 一层薄接口"。但对我来说,能完全自己控制的东西,用起来就是踏实。</p>
+        <h2>结果顺手长出了 AI 网关</h2>
+        <p>骨架搭好之后,我想起自己手上有 DeepSeek、阿里云百炼、豆包(火山方舟)几家不同的模型 Key。平时写小工具,每换一家就要改一次请求地址和字段写法,很碎。既然已经有现成的服务端,我就顺手在里面加了一层 <strong>OpenAI 兼容的 AI 聚合网关</strong>:对外只暴露 <code>/v1/chat/completions</code> 和 <code>/v1/models</code>,按请求里的 <code>model</code> 路由转发到不同的上游。</p>
+        <p>这样任何支持 OpenAI SDK 的工具,只要把 <code>base_url</code> 换成本服务地址、<code>api_key</code> 换成统一接入密钥,就能用,完全不用关心背后是谁。</p>
+
+        <h2>网关的几件正事</h2>
+        <ul>
+            <li><strong>统一密钥</strong>:所有用户共用一个全局接入密钥,默认 <code>azapp888</code>,可用 <code>GATEWAY_API_KEY</code> 改。</li>
+            <li><strong>限流与用量</strong>:带 RPM / 并发 / TPM / 日额度限制,并统计用量(按模型、按天)。</li>
+            <li><strong>模型不写死</strong>:<code>model_mappings</code> 就是白名单,在后台随时增删启停,没配置的模型直接返回 404。</li>
+            <li><strong>后台向导</strong>:第一次登录管理后台,按"填上游 Key → 加模型 → 复制统一密钥"三步走。系统不预置任何模型。</li>
+        </ul>
+        <pre><code>curl -s http://localhost:8100/v1/chat/completions \
+  -H "Authorization: Bearer azapp888" -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-chat","messages":[{"role":"user","content":"你好"}]}'</code></pre>
+
+        <h2>在一台小机器上也能跑</h2>
+        <p>我把它设计成能"单机零依赖"跑起来:默认用 SQLite(靠 Node 22 内置的 <code>node:sqlite</code>)+ 内存限流 + mock 上游,不需要 Postgres、Redis,也不需要先把上游 Key 配好就能起服务看界面。真正上线时,需要一个独立数据库或多实例,再换成 Postgres + Redis + Docker compose 的完整方案。我甚至在一台 RK3566(Debian ARM64、4GB 内存、8GB eMMC)的小机器上跑过它的单机模式。</p>
+
+        <h2>关于安全</h2>
+        <p>仓库里不含任何真实密钥,<code>.env</code> 已进 <code>.gitignore</code>,只留一份 <code>.env.example</code> 模板。上游密钥在数据库里是加密存的,部署前要自己生成强随机的 <code>JWT_SECRET</code> 并收紧跨域来源。网关这种"所有人都走一个入口"的东西,密钥和限流一定要严肃对待。</p>
+        <p>代码开在 GitHub 上:</p>
+        <p class="no-indent"><a href="https://github.com/Azapp888/AzappApi" target="_blank" rel="noopener">github.com/Azapp888/AzappApi</a></p>
         <p class="no-indent">—— 阿泽Aza.</p>
     </article>
 </main>

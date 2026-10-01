@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A0E0A" />
     <title>ServicePressure:给自己写的服务器监控,先救了自己 · 阿泽Aza</title>
     <meta name="description" content="凌晨三点服务器负载打满我却毫不知情——ServicePressure 的诞生过程:追踪负载/内存/磁盘,告警推送到手机。" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
@@ -65,8 +66,48 @@
         article pre code { background: none; padding: 0; color: #d0d0d0; }
         article ul { margin: 0 0 16px 2em; color: #d0d0d0; }
         article li { margin-bottom: 6px; }
-        .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; }
-        @media (prefers-reduced-motion: reduce) { .topnav a { transition: none; } }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: rgba(30, 215, 96, 0.10);
+            border: 1px solid rgba(30, 215, 96, 0.30);
+            color: #1ED760;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.25s, border-color 0.25s, transform 0.2s;
+        }
+        .back-link:hover {
+            background: rgba(30, 215, 96, 0.20);
+            border-color: #1ED760;
+            transform: translateY(-2px);
+        }
+        .back-link:focus-visible { outline: 2px solid #1ED760; outline-offset: 2px; }
+        /* ========== Mobile ========== */
+        @media (max-width: 640px) {
+            html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+            a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+            .topnav-inner { padding: 0 16px; gap: 10px; height: 52px; }
+            .topnav a { font-size: 0.82rem; }
+            main { padding: 28px 18px 48px; }
+            h1 { font-size: 1.4rem; margin-bottom: 22px; }
+            article { overflow-wrap: break-word; }
+            article h2 { font-size: 1.14rem; margin: 28px 0 12px; }
+            article pre { padding: 14px; font-size: 0.78rem; border-radius: 8px; -webkit-overflow-scrolling: touch; }
+            article ul { margin-left: 1.25em; }
+            .post-meta { flex-wrap: wrap; gap: 6px 12px; }
+            .back-link { padding: 11px 18px; min-height: 44px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .topnav a { transition: none; }
+            .back-link { transition: none; }
+            .back-link:hover { transform: none; }
+        }
     </style>
 </head>
 <body>
@@ -105,7 +146,7 @@
 
         <h2>一个小项目的边界</h2>
         <p>它不是什么专业的监控系统,单机、单进程、代码量不大,很多地方都是能跑就行。但对我来说,它是第一个"先解决了自己的真实问题"的东西。下一步想加的也不多:告警恢复通知,和按服务拆分资源占用。先想到哪写到哪。</p>
-        <p class="no-indent">—— 阿泽,高三,时间不多,周末更新。</p>
+        <p class="no-indent">—— 阿泽Aza.</p>
     </article>
 </main>
 </body>

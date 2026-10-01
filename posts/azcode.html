@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A0E0A" />
+    <title>AzCode:让模型直接操作你自己的设备 · 阿泽Aza</title>
+    <meta name="description" content="用自然语言描述任务,模型决策后直接操作当前设备——AzCode 三端助手的设计、缓存命中的执念,和插件市场。" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+            background: #0A0E0A;
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(10, 14, 10, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(30, 215, 96, 0.14);
+        }
+        .topnav-inner {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+        .topnav a { color: #bbb; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .topnav a:hover { color: #1ED760; }
+        .topnav-brand { color: #fff !important; font-weight: 700; font-size: 1rem; }
+        .topnav-brand span { color: #1ED760; }
+        main { max-width: 760px; margin: 0 auto; padding: 40px 24px 64px; }
+        .post-meta { display: flex; gap: 12px; font-size: 0.85rem; color: #999; margin-bottom: 12px; }
+        .post-meta .date { color: #1ED760; font-weight: 500; }
+        h1 { font-size: 1.7rem; color: #fff; line-height: 1.4; margin-bottom: 28px; }
+        article h2 { font-size: 1.25rem; color: #1ED760; margin: 36px 0 14px; }
+        article p { margin-bottom: 16px; color: #d0d0d0; text-indent: 2em; }
+        article p.no-indent { text-indent: 0; }
+        article pre {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(30, 215, 96, 0.15);
+            border-radius: 10px;
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 0 0 18px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        article code {
+            font-family: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+            background: rgba(30, 215, 96, 0.10);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #1ED760;
+        }
+        article pre code { background: none; padding: 0; color: #d0d0d0; }
+        article ul { margin: 0 0 16px 2em; color: #d0d0d0; }
+        article li { margin-bottom: 6px; }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: rgba(30, 215, 96, 0.10);
+            border: 1px solid rgba(30, 215, 96, 0.30);
+            color: #1ED760;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.25s, border-color 0.25s, transform 0.2s;
+        }
+        .back-link:hover {
+            background: rgba(30, 215, 96, 0.20);
+            border-color: #1ED760;
+            transform: translateY(-2px);
+        }
+        .back-link:focus-visible { outline: 2px solid #1ED760; outline-offset: 2px; }
+        /* ========== Mobile ========== */
+        @media (max-width: 640px) {
+            html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+            a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+            .topnav-inner { padding: 0 16px; gap: 10px; height: 52px; }
+            .topnav a { font-size: 0.82rem; }
+            main { padding: 28px 18px 48px; }
+            h1 { font-size: 1.4rem; margin-bottom: 22px; }
+            article { overflow-wrap: break-word; }
+            article h2 { font-size: 1.14rem; margin: 28px 0 12px; }
+            article pre { padding: 14px; font-size: 0.78rem; border-radius: 8px; -webkit-overflow-scrolling: touch; }
+            article ul { margin-left: 1.25em; }
+            .post-meta { flex-wrap: wrap; gap: 6px 12px; }
+            .back-link { padding: 11px 18px; min-height: 44px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .topnav a { transition: none; }
+            .back-link { transition: none; }
+            .back-link:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+<nav class="topnav" aria-label="主导航">
+    <div class="topnav-inner">
+        <a class="topnav-brand" href="../index.html">阿泽<span>Aza</span></a>
+        <a href="../index.html#posts">← 返回技术笔记</a>
+    </div>
+</nav>
+<main>
+    <article>
+        <a class="back-link" href="../index.html#posts"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回</a>
+        <div class="post-meta">
+            <span class="date">2026-09-28</span>
+            <span>AI Agent · 自动化 · 三端</span>
+        </div>
+        <h1>AzCode:让模型直接操作你自己的设备</h1>
+
+        <p>这是我最近做得最投入的一个项目,叫 <code>AzCode</code>。一句话说清楚它:你用自己的话描述一件想做的事,模型做决策,然后直接操作你现在用的这台设备去把事做完。不是问答,是让模型真的动手。</p>
+
+        <h2>为什么想做它</h2>
+        <p>之前我用过不少"AI 助手",但大多数只能聊天、只能给建议,最后一步还是要我自己去点。我手边有手机、有电脑、有一台常年开着的 Linux 服务器,很多重复操作其实很适合交出去——比如"打开设置看看 Android 版本""把这批文件按日期整理一下"。于是我想:能不能让模型自己把手也伸过去?</p>
+        <p>关键点是:所有操作都发生在本机,模型只负责决策和调用工具,具体的动作由设备自己的能力完成。这样我不用把设备交给某个云端服务,数据也不出本机。</p>
+
+        <h2>三端,两个形态</h2>
+        <p>AzCode 不是单个 App,而是一组跑在不同平台上的独立助手,功能对等,共用一个命名约定和核心机制。按平台分了三端:</p>
+        <ul>
+            <li><strong>Android</strong>(Kotlin 原生):通过无障碍 / Shizuku / Root 直接操作手机,内置聊天界面、多模型提供商、完整 Markdown、技能与插件管理。</li>
+            <li><strong>Windows</strong>(.NET 8 / WPF):用 UI Automation 读屏、模拟键鼠、执行 PowerShell,直接控制这台电脑。</li>
+            <li><strong>Linux</strong>(Python):同一入口按桌面环境自动选择图形界面或命令行。</li>
+        </ul>
+        <p>同一个平台还有两个形态:有图形环境时用的是带界面的 <code>magic</code>,没有图形环境或者在终端里更顺手时用命令行的 <code>Listen</code>。两个形态共用同一套 Agent 核心、配置和插件,所以行为是一致的。Linux 端装完是这样用的:</p>
+        <pre><code>curl -fsSL https://raw.githubusercontent.com/Azapp888/AzCode/260912-feat-linux-native/linux/install.sh | bash
+listen chat          # 命令行
+magic                # 图形界面</code></pre>
+
+        <h2>最花心思的地方:让缓存命中</h2>
+        <p>做多轮任务时我才发现,真正影响成本和延迟的不是模型本身,而是"缓存有没有命中"。大模型提供商按"消息前缀逐字节一致"来复用缓存,只要前面任何一个字节变了,那一处之后的缓存就全部失效,得多花钱也多等时间。</p>
+        <p>所以 AzCode 把系统提示拆成了两段:</p>
+        <ul>
+            <li><strong>稳定前缀</strong>:第 0 条 <code>system</code>,只放我长期设置的人设,字节永久不变。</li>
+            <li><strong>运行时上下文</strong>:技能、记忆、插件提示单独成一条 <code>system</code> 消息。内容没变就不重复插入,变了就追加到历史末尾,绝不回头改写前缀。</li>
+            <li>工具定义的顺序固定,不随条件增删。</li>
+        </ul>
+        <p>这套机制是我从 <code>deepseek-harness</code> 移植过来的。效果很直接:多轮任务能持续命中前缀缓存,又便宜又跟手。支持在任意位置追加 <code>system</code> 消息的模型(比如 deepseek-flash)会把最新那条当成完整系统提示,旧的自然被取代。</p>
+
+        <h2>插件市场</h2>
+        <p>AzCode 带一个很小的插件市场,最初是考虑到不同任务需要不同的约束:</p>
+        <ul>
+            <li><strong>内置 ponytail</strong>:第一次启动就写入一条"拒绝过度设计"的技能,约束 Agent 只做最小必要的改动。这条对我挺重要——模型很容易给你加一堆用不上的东西。</li>
+            <li><strong>扫描热门插件</strong>:按关键词搜 GitHub 上 star 较多的 Agent 技能仓库,一键安装里面的 <code>SKILL.md</code>。</li>
+            <li><strong>Agent 自助</strong>:模型自己也能通过工具去搜索、安装、启停、删除插件。</li>
+        </ul>
+
+        <h2>整体架构</h2>
+        <pre><code>magic / Listen(各端 UI)
+        │
+        ▼
+   Agent 决策循环 ── PromptCache(稳定前缀 + 运行时上下文追加)
+        │
+        ├── 大模型 chat/completions(OpenAI 兼容 function calling)
+        └── 设备能力
+              ├── Android:无障碍 / Shizuku / Root
+              ├── Windows:UI Automation / SendInput / PowerShell
+              └── Linux:bash / 文件 / xdotool / 截图</code></pre>
+        <p>结构其实很朴素:UI 只是外壳,中间是决策循环,底下是各端的"手"。换平台要动的只是最下面那一层,上面全部复用。</p>
+
+        <h2>现在和边界</h2>
+        <p>它还很年轻,仓库总共也就几次提交,功能对等但也只是"能用"。目前我主要在 Android 上自己用来处理一些重复操作,Windows 和 Linux 端跟着对齐。下一步想做的,是把权限边界收得更细一点——毕竟让模型直接操作设备,安全永远要排在功能前面。</p>
+        <p>代码开在 GitHub 上,感兴趣可以自己去翻:</p>
+        <p class="no-indent"><a href="https://github.com/Azapp888/AzCode" target="_blank" rel="noopener">github.com/Azapp888/AzCode</a></p>
+        <p class="no-indent">—— 阿泽Aza.</p>
+    </article>
+</main>
+</body>
+</html>
