@@ -17,6 +17,7 @@ azblog/
 ├── index.html                     # 首页（文章列表）
 ├── favicon.svg                    # 站点图标
 └── posts/
+    ├── personabot.html            # PersonaBot:让每个 QQ 号都有自己的性格与记忆
     ├── azcode.html                # AzCode:让模型直接操作你自己的设备
     ├── azappapi.html              # AzappApi:一个服务端骨架,顺手长出了 AI 网关
     ├── azapplogin.html            # AzLogin:让两个站点共用一套账号
